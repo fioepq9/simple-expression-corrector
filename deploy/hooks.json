@@ -41,6 +41,18 @@
                       "name": "ref"
                   }
               }
+          },
+          {
+              "match":
+              {
+                "type": "payload-hmac-sha1",
+                "secret": "fioepq9.cn/deploy",
+                "parameter":
+                {
+                  "source": "header",
+                  "name": "X-Hub-Signature"
+                }
+              }
           }
         ]
       }
