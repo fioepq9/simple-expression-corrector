@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "SEC Deploying..."
+echo "SEC Deploying...json"
 
 git reset --hard origin/main
 git clean -f
