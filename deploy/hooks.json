@@ -3,6 +3,14 @@
       "id": "sec",
       "execute-command": "/home/workspace/simple-expression-corrector/deploy/deploy.sh",
       "command-working-directory": "/home/workspace/simple-expression-corrector",
+      "response-message": "sec redeploy...",
+      "response-headers":
+      [
+        {
+            "name": "Access-Control-Allow-Origin",
+            "value": "*"
+        }
+      ],
       "pass-arguments-to-command":
       [
         {
@@ -17,6 +25,24 @@
           "source": "payload",
           "name": "pusher.email"
         }
-      ]
+      ],
+      "trigger-rule":
+      {
+        "and":
+        [
+          {
+              "match":
+              {
+                  "type": "value",
+                  "value": "refs/heads/main",
+                  "parameter":
+                  {
+                      "source": "payload",
+                      "name": "ref"
+                  }
+              }
+          }
+        ]
+      }
     }
 ]
