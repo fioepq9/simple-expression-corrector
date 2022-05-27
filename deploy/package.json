@@ -3,6 +3,6 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-      "serve": "/root/go/bin/webhook -hooks hooks.json -verbose -port 9092 -hotreload"
+      "serve": "/root/go/bin/webhook -hooks hooks.json -verbose -port 9092 -hotreload >> log.txt"
     }
 }

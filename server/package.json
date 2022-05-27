@@ -3,6 +3,6 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-      "serve": "python3 main.py"
+      "serve": "python3 main.py >> log.txt"
     }
 }
