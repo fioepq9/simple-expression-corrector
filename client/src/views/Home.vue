@@ -4,30 +4,29 @@
       <!-- header -->
       <a-layout-header>
         <a-page-header title="simple-expression-corrector" subtitle="v 1.0" :show-back="false">
-          <template #extra>
-            <a-avatar>未登录</a-avatar>
-          </template>
-          <div/>
+        <template #extra>
+          <a-avatar>未登录</a-avatar>
+        </template>
+        <div/>
         </a-page-header>
       </a-layout-header>
 
       <!-- content -->
       <a-layout-content>
-        <a-space direction="vertical" fill>
-            <a-upload style="padding: 20px; width:95%; text-align: left;"
-              accept="image/png"
-              list-type="picture"
-              action="/"
-              :default-file-list="imageList"
-            >
-            <template v-slot:image="{ fileItem }">
-              <a-image :src="fileItem.url" width="40" height="40"></a-image>
-              <a-button type="primary" size="mini" style="position:absolute; top:15px; right:100px" @click="showResult(fileItem)">查看结果</a-button>
-            </template>
-            </a-upload>
-
-            <!-- Drawer -->
-        </a-space>
+        <a-upload style="padding: 20px; width:95%; text-align: left;"
+          accept="image/png"
+          list-type="picture"
+          action="/"
+          :default-file-list="imageList"
+        >
+        <template v-slot:image="{ fileItem }">
+          <a-image :src="fileItem.url" width="40" height="40"/>
+          <a-button type="primary" size="mini" 
+            style="position:absolute; top:15px; right:100px"
+            @click="showResult(fileItem)"
+          >查看结果</a-button>
+        </template>
+        </a-upload>
       </a-layout-content>
 
       <!-- footer -->

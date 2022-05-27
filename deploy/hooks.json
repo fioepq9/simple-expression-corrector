@@ -1,0 +1,22 @@
+[
+    {
+      "id": "sec",
+      "execute-command": "/home/workspace/simple-expression-corrector/deploy/deploy.sh",
+      "command-working-directory": "/home/workspace/simple-expression-corrector/deploy",
+      "pass-arguments-to-command":
+      [
+        {
+          "source": "payload",
+          "name": "head_commit.id"
+        },
+        {
+          "source": "payload",
+          "name": "pusher.name"
+        },
+        {
+          "source": "payload",
+          "name": "pusher.email"
+        }
+      ]
+    }
+]
