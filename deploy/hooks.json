@@ -16,28 +16,28 @@
         "and":
         [
           {
-              "match":
+            "match":
+            {
+              "type": "value",
+              "value": "refs/heads/main",
+              "parameter":
               {
-                  "type": "value",
-                  "value": "refs/heads/main",
-                  "parameter":
-                  {
-                      "source": "payload",
-                      "name": "ref"
-                  }
+                "source": "payload",
+                "name": "ref"
               }
+            }
           },
           {
-              "match":
+            "match":
+            {
+              "type": "payload-hmac-sha1",
+              "secret": "fioepq9.cn/deploy",
+              "parameter":
               {
-                "type": "payload-hmac-sha1",
-                "secret": "fioepq9.cn/deploy",
-                "parameter":
-                {
-                  "source": "header",
-                  "name": "X-Hub-Signature"
-                }
+                "source": "header",
+                "name": "X-Hub-Signature"
               }
+            }
           }
         ]
       }
