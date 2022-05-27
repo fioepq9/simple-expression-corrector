@@ -2,7 +2,7 @@
     {
       "id": "sec",
       "execute-command": "/home/workspace/simple-expression-corrector/deploy/deploy.sh",
-      "command-working-directory": "/home/workspace/simple-expression-corrector/deploy",
+      "command-working-directory": "/home/workspace/simple-expression-corrector",
       "pass-arguments-to-command":
       [
         {
