@@ -24,7 +24,7 @@ def BaseResponse(code: int, msg: str) -> Dict[str, Any]:
 
 
 @toResponse
-def RespnseWithData(code: int, msg: str, data_name: str | None, data: Dict[str, Any]) -> Dict[str, Any]:
+def RespnseWithData(code: int, msg: str, data_name: "str | None", data: Dict[str, Any]) -> Dict[str, Any]:
     if data_name is None:
         resp = {
             "status": {
