@@ -1,20 +1,23 @@
-from typing import Any
-from flask import Blueprint, request
+from flask import Response
+from flask_restful import Resource, reqparse
+from flask_restful.reqparse import FileStorage
 
-upload_bp: Blueprint = Blueprint('upload', __name__)
+from dal.db.image import ImageCli
+from .models import UploadResponse
 
 
-@upload_bp.route('/', methods=['POST'])
-def upload():
-    file = request.files.get('file')
-    print("ok")
-    if file is None:
-        return {
-            'status_code': 1,
-            'status_msg': '文件上传失败',
-        }
-    return {
-        'status_code': 0,
-        'status_msg': '文件上传成功',
-        'file_name': file.filename,
-    }
+class Upload(Resource):
+    def __init__(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('file', type=FileStorage, location='files')
+        self.parser = parser
+
+    def post(self) -> Response:
+        req = self.parser.parse_args()
+
+        file: FileStorage = req['file']
+        filename = file.filename
+        pid, save_url = ImageCli.Upload(filename, 0)
+
+        file.save(save_url)
+        return UploadResponse(0, '文件上传成功', pid, filename, save_url)
