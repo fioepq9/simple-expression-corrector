@@ -9,3 +9,6 @@ git checkout main
 
 # set permission
 chmod -R a+rwx .
+
+# server
+cd server && ./build.sh
