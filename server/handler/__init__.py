@@ -4,7 +4,7 @@ from flask import Flask
 from flask_restful import Api
 
 
-def RegisterRoute(app: Flask):
+def init_app(app: Flask):
     # app.register_blueprint(user_bp, url_prefix='/user')
     # app.register_blueprint(judge_bp, url_prefix='/judge')
     # app.register_blueprint(upload_bp, url_prefix='/upload')

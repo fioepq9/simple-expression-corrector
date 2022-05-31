@@ -7,7 +7,7 @@ import config
 db: SQLAlchemy = SQLAlchemy()
 
 
-def init_db(app: Flask):
+def init_app(app: Flask):
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://{}:{}@{}:{}/{}'.format(
         config.MySQL_user,
         config.MySQL_passwd,
@@ -26,7 +26,6 @@ def init_db(app: Flask):
 
     global db
     db = SQLAlchemy(app)
-
 
 
 class MySQLModel(Model):

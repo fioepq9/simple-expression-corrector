@@ -17,14 +17,19 @@ class User(db.Model):
         db.session.commit()
 
     @classmethod
-    def FindByUsername(cls, username: str) -> 'User':
+    def FindByUsername(cls, username: str) -> "'User' | None":
         """
         Find User By username.
 
         :param username: username
         :return: user who match the username
         """
-        return cls.query.filter_by(Username=username).first()
+        try:
+            user = cls.query.filter_by(Username=username).first()
+        except:
+            return None
+        else:
+            return user
 
     @classmethod
     def Create(cls, username: str, password: str) -> ('User', bool):
@@ -35,9 +40,9 @@ class User(db.Model):
         :param password: password
         :return: is success
         """
-        uid = cls.sonyflake.next_id()
-        user = User(Id=uid, Username=username, Password=password)
         try:
+            uid = cls.sonyflake.next_id()
+            user = User(Id=uid, Username=username, Password=password)
             user.save()
         except:
             return None, False

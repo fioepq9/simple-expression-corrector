@@ -24,7 +24,7 @@ def BaseResponse(code: int, msg: str) -> Dict[str, Any]:
 
 
 @toResponse
-def RespnseWithData(code: int, msg: str, data_name: "str | None", data: Dict[str, Any]) -> Dict[str, Any]:
+def ResponseWithData(code: int, msg: str, data_name: "str | None", data: Dict[str, Any]) -> Dict[str, Any]:
     if data_name is None:
         resp = {
             "status": {
@@ -48,7 +48,7 @@ def ErrorResponse(code: int, msg: str) -> Response:
 
 
 def UploadResponse(code: int, msg: str, pid: int, name: str, url: str) -> Response:
-    return RespnseWithData(code, msg, 'image', {
+    return ResponseWithData(code, msg, 'image', {
         'id': str(pid),
         'name': name,
         'url': url,
@@ -56,7 +56,14 @@ def UploadResponse(code: int, msg: str, pid: int, name: str, url: str) -> Respon
 
 
 def RegisterResponse(code: int, msg: str, uid: int, token: str) -> Response:
-    return RespnseWithData(code, msg, None, {
+    return ResponseWithData(code, msg, None, {
         "id": str(uid),
-        "toekn": token,
+        "token": token,
+    })
+
+
+def LoginResponse(code: int, msg: str, uid: int, token: str) -> Response:
+    return ResponseWithData(code, msg, None, {
+        "id": str(uid),
+        "token": token,
     })

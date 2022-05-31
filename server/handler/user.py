@@ -1,8 +1,11 @@
+import datetime
+
 from flask import Blueprint, request, Response
 from flask_restful import Resource, reqparse
 
 from dal.db.user import User
-from .models import ErrorResponse, RegisterResponse
+from .models import ErrorResponse, RegisterResponse, LoginResponse
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 
 class UserRegister(Resource):
@@ -15,19 +18,32 @@ class UserRegister(Resource):
     def post(self) -> Response:
         req = self.parser.parse_args()
 
+        # assert the [username] and [password] in the JSON body
         username = req['username']
         password = req['password']
         if username is None or password is None:
             return ErrorResponse(1, 'Missing required parameter in the JSON body')
 
+        # assert the [username] and [password] type: str
+        if not isinstance(username, type('str')) or not isinstance(password, type('str')):
+            return ErrorResponse(4, 'Bad Request for error param value')
+
+        # check if user already exist
         if User.FindByUsername(username):
             return ErrorResponse(2, '用户名 {} 已存在'.format(username))
 
+        # create user
         user, ok = User.Create(username, password)
         if not ok:
             return ErrorResponse(3, '用户注册失败')
 
-        return RegisterResponse(0, '注册成功', user.Id, 'token')
+        # use JWT to generate token
+        token = create_access_token(
+            identity=user.Id,
+            expires_delta=datetime.timedelta(hours=1),
+        )
+
+        return RegisterResponse(0, '注册成功', user.Id, token)
 
 
 class UserLogin(Resource):
@@ -40,13 +56,25 @@ class UserLogin(Resource):
     def post(self) -> Response:
         req = self.parser.parse_args()
 
+        # assert the [username] and [password] in the JSON body
         username = req['username']
         password = req['password']
         if username is None or password is None:
             return ErrorResponse(1, 'Missing required parameter in the JSON body')
 
+        # assert the [username] and [password] type: str
+        if not isinstance(username, type('str')) or not isinstance(password, type('str')):
+            return ErrorResponse(4, 'Bad Request for error param value')
+
+        # check if user exist and password is correct
         user = User.FindByUsername(username)
         if not user or user.Password != password:
             return ErrorResponse(2, '用户名或密码错误')
 
-        return RegisterResponse(0, '登录成功', user.Id, 'token')
+        # use JWT to generate token
+        token = create_access_token(
+            identity=user.Id,
+            expires_delta=datetime.timedelta(hours=1),
+        )
+
+        return LoginResponse(0, '登录成功', user.Id, token)

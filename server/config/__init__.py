@@ -1,3 +1,5 @@
+APP_name = 'simple-expression-corrector'
+
 uploadFolder = "static/upload/"
 
 MySQL_user = 'fioepq9'

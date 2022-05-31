@@ -14,14 +14,12 @@ class Image(db.Model):
     Name = db.Column('name', db.VARCHAR(128))
     Url = db.Column('url', db.VARCHAR(8182))
     UploadTime = db.Column('upload_time', db.TIMESTAMP)
+    # tools
+    sonyflake = SonyFlake()
 
     def save(self):
         db.session.add(self)
         db.session.commit()
-
-
-class ImageCli:
-    sonyflake = SonyFlake()
 
     @classmethod
     def Upload(cls, name: str, uid: int) -> (int, str):
@@ -32,7 +30,7 @@ class ImageCli:
             :param uid: uploader id
             :return: (image id, image url)
         """
-        pid = ImageCli.sonyflake.next_id()
+        pid = cls.sonyflake.next_id()
         url = os.path.join(config.uploadFolder, str(pid) + '_' + name)
         img = Image(Id=pid, Uid=uid, Name=name, Url=url, UploadTime=None)
         img.save()
