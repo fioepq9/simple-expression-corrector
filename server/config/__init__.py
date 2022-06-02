@@ -8,4 +8,4 @@ MySQL_host = 'fioepq9.cn'
 MySQL_port = 3306
 MySQL_db = 'sec'
 
-PATH_TO_MODEL = 'asset/convnet.pth'
+PATH_TO_MODEL = 'asset/crnn.pth'
