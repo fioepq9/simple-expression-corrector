@@ -67,3 +67,9 @@ def LoginResponse(code: int, msg: str, uid: int, token: str) -> Response:
         "id": str(uid),
         "token": token,
     })
+
+
+def JudgeResponse(code: int, msg: str, result: str) -> Response:
+    return ResponseWithData(code, msg, None, {
+        "result": result,
+    })

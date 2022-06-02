@@ -28,7 +28,7 @@
       <!-- content -->
       <a-layout-content>
         <a-upload style="padding: 20px; width:95%; text-align: left;"
-          accept="image/png"
+          accept="image/png; image/jpg"
           list-type="picture"
           action="/"
           :custom-request="upload.Do"
@@ -39,6 +39,7 @@
           <a-button type="primary" size="mini"
             style="position:absolute; top:15px; right:100px"
             @click="res.showResult(fileItem)"
+            :loading="upload.Loading.get(fileItem.uid)"
           >查看结果</a-button>
         </template>
         </a-upload>
@@ -109,90 +110,6 @@ import axios, { AxiosResponse, Canceler } from 'axios'
 import { Message, FileItem, RequestOption, UploadRequest } from '@arco-design/web-vue'
 import store from '@/store'
 
-class Upload {
-  imageList = [] as FileItem[]
-  Do = (option: RequestOption): UploadRequest => {
-    const { onProgress, onError, onSuccess, fileItem, name } = option
-
-    if (store.getters.token === 'null') {
-      Message.info('请先登录')
-      onError('Need Token')
-      return {}
-    }
-
-    if (fileItem.file!.size >= 1024 * 1024) {
-      Message.warning('图片过大, 请限制在 1 MB 以内')
-      onError('Too Large Size')
-      return {}
-    }
-
-    const formData = new FormData()
-    formData.append(name as string || 'file', fileItem.file as Blob)
-
-    let cancel: Canceler
-
-    axios.post('http://localhost:8080/api/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: 'Bearer ' + store.getters.token
-      },
-      onUploadProgress: (process) => {
-        let percent = 0
-        if (process.total > 0) {
-          percent = (process.loaded / process.total) * 100
-        }
-        onProgress(percent, process)
-      },
-      cancelToken: new axios.CancelToken((c) => {
-        cancel = c
-      })
-    }).catch((err) => {
-      onError(err)
-    }).then((vhttpResp: void | AxiosResponse) => {
-      // check resp is not null
-      if (!vhttpResp) {
-        Message.error('未知错误')
-        onError('null')
-        return
-      }
-      // parse resp
-      const httpResp = vhttpResp as AxiosResponse
-      const httpStatus = {
-        code: httpResp.status,
-        msg: httpResp.statusText
-      }
-      const resp = httpResp.data
-      // check http status
-      if (httpStatus.code !== 200) {
-        Message.error(httpStatus.msg)
-        onError(httpStatus.msg)
-        return
-      }
-      // check server status
-      if (resp.status.code !== 0) {
-        Message.error(resp.status.msg)
-        onError(resp.status.msg)
-        return
-      }
-      // push image
-      this.imageList.push({
-        uid: resp.image.id,
-        name: resp.image.name,
-        url: resp.image.url
-      })
-      // success message
-      onSuccess(resp)
-      Message.success('上传 ' + resp.image.name + ' 成功')
-    })
-
-    return {
-      abort () {
-        cancel()
-      }
-    }
-  }
-}
-
 @Options({
   components: {
     IconUser,
@@ -201,27 +118,148 @@ class Upload {
 })
 export default class Home extends Vue {
   res = {
+    resultDict: new Map(),
     Visible: false,
     Title: 'Result',
     Content: 'nothing',
-
     handleOk: (): void => {
       this.res.Visible = false
     },
-
     handleCancel: (): void => {
       this.res.Visible = false
     },
+    getResult: (id: string, url: string): void => {
+      axios.post('http://localhost:8080/api/judge', {
+        url: url
+      }, {
+        headers: {
+          Authorization: 'Bearer ' + store.getters.token
+        }
+      }).catch((err) => {
+        Message.error(err)
+      }).then((vhttpResp: void | AxiosResponse) => {
+        // check resp is not null
+        if (!vhttpResp) {
+          Message.error('未知错误')
+          return
+        }
+        // parse resp
+        const httpResp = vhttpResp as AxiosResponse
+        const httpStatus = {
+          code: httpResp.status,
+          msg: httpResp.statusText
+        }
+        const resp = httpResp.data
+        // check http status
+        if (httpStatus.code !== 200) {
+          Message.error(httpStatus.msg)
+          return
+        }
+        // check server status
+        if (resp.status.code !== 0) {
+          Message.error(resp.status.msg)
+          return
+        }
+        this.res.resultDict.set(id, resp.result)
+        this.upload.Loading.set(id, false)
+      })
+    },
     showResult: (fileItem: {uid: string, name: string, url: string}): void => {
       const title = fileItem.name
-      const content = fileItem.uid + ', url = ' + fileItem.url + ', Result = noting'
+      const content = this.res.resultDict.get(fileItem.uid)
       this.res.Visible = true
       this.res.Title = title
-      this.res.Content = content
+      this.res.Content = 'Predicted digit -> ' + content
     }
   }
 
-  upload = new Upload()
+  upload = {
+    imageList: [] as FileItem[],
+    Loading: new Map(),
+    Do: (option: RequestOption): UploadRequest => {
+      const { onProgress, onError, onSuccess, fileItem, name } = option
+
+      if (store.getters.token === 'null') {
+        Message.info('请先登录')
+        onError('Need Token')
+        return {}
+      }
+
+      if ((fileItem.file as File).size >= 1024 * 1024) {
+        Message.warning('图片过大, 请限制在 1 MB 以内')
+        onError('Too Large Size')
+        return {}
+      }
+
+      const formData = new FormData()
+      formData.append(name as string || 'file', fileItem.file as Blob)
+
+      let cancel: Canceler
+
+      axios.post('http://localhost:8080/api/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: 'Bearer ' + store.getters.token
+        },
+        onUploadProgress: (process) => {
+          let percent = 0
+          if (process.total > 0) {
+            percent = (process.loaded / process.total) * 100
+          }
+          onProgress(percent, process)
+        },
+        cancelToken: new axios.CancelToken((c) => {
+          cancel = c
+        })
+      }).catch((err) => {
+        onError(err)
+      }).then((vhttpResp: void | AxiosResponse) => {
+      // check resp is not null
+        if (!vhttpResp) {
+          Message.error('未知错误')
+          onError('null')
+          return
+        }
+        // parse resp
+        const httpResp = vhttpResp as AxiosResponse
+        const httpStatus = {
+          code: httpResp.status,
+          msg: httpResp.statusText
+        }
+        const resp = httpResp.data
+        // check http status
+        if (httpStatus.code !== 200) {
+          Message.error(httpStatus.msg)
+          onError(httpStatus.msg)
+          return
+        }
+        // check server status
+        if (resp.status.code !== 0) {
+          Message.error(resp.status.msg)
+          onError(resp.status.msg)
+          return
+        }
+        // push image
+        this.upload.imageList.push({
+          uid: resp.image.id,
+          name: resp.image.name,
+          url: resp.image.url
+        })
+        // judge image
+        this.upload.Loading.set(resp.image.id, true)
+        this.res.getResult(resp.image.id, resp.image.url)
+        // success message
+        onSuccess(resp)
+        Message.success('上传 ' + resp.image.name + ' 成功')
+      })
+
+      return {
+        abort () {
+          cancel()
+        }
+      }
+    }
+  }
 
   avaterStyle = [
     { backgroundColor: '#7BC616' },

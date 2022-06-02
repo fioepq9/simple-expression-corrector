@@ -5,9 +5,11 @@ pip3 install flask
 pip3 install flask-restful
 pip3 install flask-jwt-extended
 
-
 pip3 install Flask-SQLAlchemy
 pip3 install pymysql
 pip3 install mysqlclient
 
 pip3 install sonyflake-py
+
+pip3 install torch
+pip3 install torchvision

@@ -4,10 +4,12 @@ from flask_jwt_extended import JWTManager
 import config
 import dal.db as db
 import handler
+import model
 
 if __name__ == "__main__":
     app: Flask = Flask(__name__)
 
+    model.init_model()
     handler.init_app(app)
     db.init_app(app)
 

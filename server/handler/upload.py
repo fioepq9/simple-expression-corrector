@@ -1,10 +1,10 @@
 from flask import Response
 from flask_restful import Resource, reqparse
 from flask_restful.reqparse import FileStorage
-
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from dal.db.image import Image
+
 from .models import ErrorResponse, UploadResponse
 
 

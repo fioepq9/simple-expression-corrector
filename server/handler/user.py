@@ -1,11 +1,10 @@
 import datetime
-
-from flask import Blueprint, request, Response
+from flask import Response
 from flask_restful import Resource, reqparse
+from flask_jwt_extended import create_access_token
 
 from dal.db.user import User
 from .models import ErrorResponse, RegisterResponse, LoginResponse
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 
 class UserRegister(Resource):
