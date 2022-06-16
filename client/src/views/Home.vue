@@ -39,24 +39,63 @@
           <a-button type="primary" size="mini"
             style="position:absolute; top:15px; right:100px"
             @click="res.showResult(fileItem)"
+            :loading="judge.loading.get(fileItem.uid)"
           >查看结果</a-button>
         </template>
         </a-upload>
+        <a-empty v-if="upload.isEmpty"/>
       </a-layout-content>
 
       <!-- footer -->
       <a-layout-footer>
         <!-- test -->
-        footer
+        <icon-to-top :size="50"/>
       </a-layout-footer>
     </a-layout>
 
   <!-- result -->
-  <a-drawer :visible="res.Visible" placement="bottom" @ok="res.handleOk" @cancel="res.handleCancel" :hide-cancel="true" ok-text="反馈 Bug" unmountOnClose>
+  <a-modal :visible="res.Visible"
+  @ok="res.handleOk_bugfeedback" ok-text="反馈 Bug"
+  @cancel="res.handleCancel" :hide-cancel="true"
+  :closable="false"
+  width="auto"
+  unmountOnClose>
   <template #title>
       {{ res.Title }}
   </template>
-  <div>{{ res.Content }}</div>
+    <div @click="() => { res.Content.preview_visible = true }">
+      <a-image
+      :src="res.Content.src"
+      footer-position="outer"
+      :preview-visible="res.Content.preview_visible"
+      @preview-visible-change="() => { res.Content.preview_visible = false }"
+      />
+    </div>
+  </a-modal>
+
+  <!-- Bug feedback -->
+  <a-drawer placeholder="right" :width="400"
+    :visible="bug.Visible"
+    @ok="bug.handleOk" ok-text="反馈"
+    :ok-button-props="{'loading': bug.feedback_button.loading}"
+    @cancel="bug.handleCancel" cancel-text="取消"
+    :closable="false"
+    :mask="false" :mask-closable="false"
+  >
+  <template #title>
+      {{ bug.Title }}
+  </template>
+  <a-form :model="bug.Form" layout="vertical">
+      <a-form-item field="email" label="邮箱">
+        <a-input v-model="bug.Form.email" placeholder="please enter your email" />
+      </a-form-item>
+      <a-form-item field="description" label="描述">
+        <a-textarea v-model="bug.Form.description" placeholder="Please enter something"
+        :auto-size="{minRows: 15, maxRows: 15}"
+        :max-length="500"
+        show-word-limit/>
+      </a-form-item>
+    </a-form>
   </a-drawer>
 
   <!-- form -->
@@ -108,90 +147,7 @@ import { IconUser, IconBulb } from '@arco-design/web-vue/es/icon'
 import axios, { AxiosResponse, Canceler } from 'axios'
 import { Message, FileItem, RequestOption, UploadRequest } from '@arco-design/web-vue'
 import store from '@/store'
-
-class Upload {
-  imageList = [] as FileItem[]
-  Do = (option: RequestOption): UploadRequest => {
-    const { onProgress, onError, onSuccess, fileItem, name } = option
-
-    if (store.getters.token === 'null') {
-      Message.info('请先登录')
-      onError('Need Token')
-      return {}
-    }
-
-    if ((fileItem.file as File).size >= 1024 * 1024) {
-      Message.warning('图片过大, 请限制在 1 MB 以内')
-      onError('Too Large Size')
-      return {}
-    }
-
-    const formData = new FormData()
-    formData.append(name as string || 'file', fileItem.file as Blob)
-
-    let cancel: Canceler
-
-    axios.post('http://localhost:8080/api/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: 'Bearer ' + store.getters.token
-      },
-      onUploadProgress: (process) => {
-        let percent = 0
-        if (process.total > 0) {
-          percent = (process.loaded / process.total) * 100
-        }
-        onProgress(percent, process)
-      },
-      cancelToken: new axios.CancelToken((c) => {
-        cancel = c
-      })
-    }).catch((err) => {
-      onError(err)
-    }).then((vhttpResp: void | AxiosResponse) => {
-      // check resp is not null
-      if (!vhttpResp) {
-        Message.error('未知错误')
-        onError('null')
-        return
-      }
-      // parse resp
-      const httpResp = vhttpResp as AxiosResponse
-      const httpStatus = {
-        code: httpResp.status,
-        msg: httpResp.statusText
-      }
-      const resp = httpResp.data
-      // check http status
-      if (httpStatus.code !== 200) {
-        Message.error(httpStatus.msg)
-        onError(httpStatus.msg)
-        return
-      }
-      // check server status
-      if (resp.status.code !== 0) {
-        Message.error(resp.status.msg)
-        onError(resp.status.msg)
-        return
-      }
-      // push image
-      this.imageList.push({
-        uid: resp.image.id,
-        name: resp.image.name,
-        url: resp.image.url
-      })
-      // success message
-      onSuccess(resp)
-      Message.success('上传 ' + resp.image.name + ' 成功')
-    })
-
-    return {
-      abort () {
-        cancel()
-      }
-    }
-  }
-}
+import constantsVue from '@/components/constants.vue'
 
 @Options({
   components: {
@@ -203,25 +159,242 @@ export default class Home extends Vue {
   res = {
     Visible: false,
     Title: 'Result',
-    Content: 'nothing',
+    Content: {
+      src: '',
+      preview_visible: false,
+      onDownload: (): void => {
+        console.log('TODO: Download')
+      }
+    },
+    file: {
+      id: '',
+      name: '',
+      url: ''
+    },
 
-    handleOk: (): void => {
-      this.res.Visible = false
+    handleOk_bugfeedback: (): void => {
+      this.bug.Visible = true
     },
 
     handleCancel: (): void => {
       this.res.Visible = false
     },
     showResult: (fileItem: {uid: string, name: string, url: string}): void => {
-      const title = fileItem.name
-      const content = fileItem.uid + ', url = ' + fileItem.url + ', Result = noting'
+      this.res.file.id = fileItem.uid
+      this.res.file.name = fileItem.name
+      this.res.file.url = fileItem.url
+
       this.res.Visible = true
-      this.res.Title = title
-      this.res.Content = content
+
+      const content = this.res.Content
+      content.src = this.judge.imageList.get(fileItem.uid).url
+      this.res.Title = fileItem.name
+      content.onDownload = (): void => {
+        console.log('TODO: Download')
+      }
     }
   }
 
-  upload = new Upload()
+  bug = {
+    Visible: false,
+    Title: 'Bug FeedBack',
+    Form: {
+      email: '',
+      description: ''
+    },
+
+    feedback_button: {
+      loading: false
+    },
+    handleOk: (): void => {
+      this.bug.feedback_button.loading = true
+      const request = {
+        upload_id: this.res.file.id,
+        judge_id: this.judge.imageList.get(this.res.file.id).uid,
+        email: this.bug.Form.email,
+        description: this.bug.Form.description
+      }
+      axios.post(constantsVue.api + 'feedback/bug', request, {
+        headers: {
+          Authorization: 'Bearer ' + store.getters.token
+        }
+      }).catch((err) => {
+        Message.error(err)
+      }).then((vhttpResp: void | AxiosResponse) => {
+        // check resp is not null
+        if (!vhttpResp) {
+          Message.error('未知错误')
+          return
+        }
+        // parse resp
+        const httpResp = vhttpResp as AxiosResponse
+        const httpStatus = {
+          code: httpResp.status,
+          msg: httpResp.statusText
+        }
+        const resp = httpResp.data
+        // check http status
+        if (httpStatus.code !== 200) {
+          Message.error(httpStatus.msg)
+          return
+        }
+        // check server status
+        if (resp.status.code !== 0) {
+          Message.error(resp.status.msg)
+          return
+        }
+        Message.success('反馈成功')
+      }).finally(() => {
+        this.bug.feedback_button.loading = false
+        this.bug.Visible = false
+        this.bug.Form.email = ''
+        this.bug.Form.description = ''
+      })
+    },
+
+    handleCancel: (): void => {
+      this.bug.Visible = false
+    }
+
+  }
+
+  upload = {
+    imageList: [] as FileItem[],
+    get isEmpty ():boolean {
+      return this.imageList.length === 0
+    },
+    Do: (option: RequestOption): UploadRequest => {
+      const { onProgress, onError, onSuccess, fileItem, name } = option
+
+      if (store.getters.token === 'null') {
+        Message.info('请先登录')
+        onError('Need Token')
+        return {}
+      }
+
+      if ((fileItem.file as File).size >= 1024 * 1024) {
+        Message.warning('图片过大, 请限制在 1 MB 以内')
+        onError('Too Large Size')
+        return {}
+      }
+
+      const formData = new FormData()
+      formData.append(name as string || 'file', fileItem.file as Blob)
+
+      let cancel: Canceler
+
+      axios.post(constantsVue.api + 'upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: 'Bearer ' + store.getters.token
+        },
+        onUploadProgress: (process) => {
+          let percent = 0
+          if (process.total > 0) {
+            percent = (process.loaded / process.total) * 100
+          }
+          onProgress(percent, process)
+        },
+        cancelToken: new axios.CancelToken((c) => {
+          cancel = c
+        })
+      }).catch((err) => {
+        onError(err)
+      }).then((vhttpResp: void | AxiosResponse) => {
+      // check resp is not null
+        if (!vhttpResp) {
+          Message.error('未知错误')
+          onError('null')
+          return
+        }
+        // parse resp
+        const httpResp = vhttpResp as AxiosResponse
+        const httpStatus = {
+          code: httpResp.status,
+          msg: httpResp.statusText
+        }
+        const resp = httpResp.data
+        // check http status
+        if (httpStatus.code !== 200) {
+          Message.error(httpStatus.msg)
+          onError(httpStatus.msg)
+          return
+        }
+        // check server status
+        if (resp.status.code !== 0) {
+          Message.error(resp.status.msg)
+          onError(resp.status.msg)
+          return
+        }
+        // push image
+        this.upload.imageList.push({
+          uid: resp.image.id,
+          name: resp.image.name,
+          url: resp.image.url
+        })
+        // success message
+        onSuccess(resp)
+        Message.success('上传 ' + resp.image.name + ' 成功')
+        this.judge.Do(resp.image.id)
+      })
+
+      return {
+        abort () {
+          cancel()
+        }
+      }
+    }
+  }
+
+  judge = {
+    imageList: new Map(),
+    loading: new Map(),
+    Do: (id: string): void => {
+      if (store.getters.token === 'null') {
+        Message.info('请先登录')
+        return
+      }
+      this.judge.loading.set(id, true)
+      const request = { id: id }
+      axios.post(constantsVue.api + 'judge', request, {
+        headers: {
+          Authorization: 'Bearer ' + store.getters.token
+        }
+      }).catch((err) => {
+        Message.error(err)
+      }).then((vhttpResp: void | AxiosResponse) => {
+        // check resp is not null
+        if (!vhttpResp) {
+          Message.error('未知错误')
+          return
+        }
+        // parse resp
+        const httpResp = vhttpResp as AxiosResponse
+        const httpStatus = {
+          code: httpResp.status,
+          msg: httpResp.statusText
+        }
+        const resp = httpResp.data
+        // check http status
+        if (httpStatus.code !== 200) {
+          Message.error(httpStatus.msg)
+          return
+        }
+        // check server status
+        if (resp.status.code !== 0) {
+          Message.error(resp.status.msg)
+          return
+        }
+        // push image
+        this.judge.imageList.set(id, {
+          uid: resp.image.id,
+          name: resp.image.name,
+          url: resp.image.url
+        })
+        this.judge.loading.set(id, false)
+      })
+    }
+  }
 
   avaterStyle = [
     { backgroundColor: '#7BC616' },
@@ -369,7 +542,7 @@ export default class Home extends Vue {
       text: '登录',
       click: ():void => {
         this.loginForm.loginButton.isLoading = true
-        axios.post('http://localhost:8080/api/user/login', {
+        axios.post(constantsVue.api + 'user/login', {
           username: this.loginForm.username.value,
           password: this.loginForm.password.value
         }).then((vHttpResp: void | AxiosResponse) => {
@@ -418,7 +591,7 @@ export default class Home extends Vue {
       text: '注册',
       click: ():void => {
         this.loginForm.registerButton.isLoading = true
-        axios.post('http://localhost:8080/api/user/register', {
+        axios.post(constantsVue.api + 'user/register', {
           username: this.loginForm.username.value,
           password: this.loginForm.password.value
         }).then((vHttpResp: void | AxiosResponse) => {

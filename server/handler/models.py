@@ -55,6 +55,18 @@ def UploadResponse(code: int, msg: str, pid: int, name: str, url: str) -> Respon
     })
 
 
+def JudgeResponse(code: int, msg: str, pid: int, name: str, url: str) -> Response:
+    return ResponseWithData(code, msg, 'image', {
+        'id': str(pid),
+        'name': name,
+        'url': url,
+    })
+
+
+def BugFeedBackResponse(code: int, msg: str) -> Response:
+    return BaseResponse(code, msg)
+
+
 def RegisterResponse(code: int, msg: str, uid: int, token: str) -> Response:
     return ResponseWithData(code, msg, None, {
         "id": str(uid),
