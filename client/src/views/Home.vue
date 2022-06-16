@@ -28,7 +28,7 @@
       <!-- content -->
       <a-layout-content>
         <a-upload style="padding: 20px; width:95%; text-align: left;"
-          accept="image/png"
+          accept="image/*"
           list-type="picture"
           action="/"
           :custom-request="upload.Do"
@@ -219,7 +219,7 @@ export default class Home extends Vue {
           Authorization: 'Bearer ' + store.getters.token
         }
       }).catch((err) => {
-        Message.error(err)
+        console.log(err)
       }).then((vhttpResp: void | AxiosResponse) => {
         // check resp is not null
         if (!vhttpResp) {
@@ -361,7 +361,7 @@ export default class Home extends Vue {
           Authorization: 'Bearer ' + store.getters.token
         }
       }).catch((err) => {
-        Message.error(err)
+        console.log(err)
       }).then((vhttpResp: void | AxiosResponse) => {
         // check resp is not null
         if (!vhttpResp) {

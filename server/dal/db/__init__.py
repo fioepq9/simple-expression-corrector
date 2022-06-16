@@ -26,22 +26,3 @@ def init_app(app: Flask):
 
     global db
     db = SQLAlchemy(app)
-
-
-class MySQLModel(Model):
-    class Meta:
-        database = db
-
-
-class ImageOld(MySQLModel):
-    Id = BigIntegerField(column_name='id')
-    Uid = BigIntegerField(column_name='uid')
-    Name = TextField(column_name='name')
-    Url = CharField(column_name='url')
-    UploadTime = TimestampField(column_name='upload_time')
-
-
-class UserOld(MySQLModel):
-    Id = BigIntegerField(column_name='id')
-    Username = CharField(column_name='username', max_length=32)
-    Password = CharField(column_name='password', max_length=32)

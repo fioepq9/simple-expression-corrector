@@ -4,6 +4,7 @@ from flask_restful import Resource, reqparse
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from .models import ErrorResponse, JudgeResponse
+from dal.db.image import Image as dbImage
 
 
 class Judge(Resource):
@@ -21,6 +22,10 @@ class Judge(Resource):
         pid = req['id']
         if pid is None:
             return ErrorResponse(1, 'id is None')
+
+        p_url = dbImage.QueryUrl(pid=pid)
+        if p_url is None:
+            return ErrorResponse(2, 'original picture not found')
 
         # TODO: judge
         judge_id = 412433529662617601

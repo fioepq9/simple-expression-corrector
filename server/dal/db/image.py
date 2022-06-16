@@ -35,3 +35,17 @@ class Image(db.Model):
         img = Image(Id=pid, Uid=uid, Name=name, Url=url, UploadTime=None)
         img.save()
         return pid, url
+
+    @classmethod
+    def QueryUrl(cls, pid: int) -> "str | None":
+        """
+        Query the save url with id
+        :param pid: id
+        :return: url
+        """
+        try:
+            img: Image = cls.query.filter_by(Id=pid).first()
+        except:
+            return None
+        else:
+            return img.Url
