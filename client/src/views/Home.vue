@@ -69,33 +69,33 @@
       <a-tab-pane key="1" title="登录">
         <a-form :model="loginForm" size="large">
           <!-- username -->
-          <a-form-item field="username" :label="loginForm.username.label" :help="loginForm.username.help" :extra="loginForm.username.extra" :validate-status="loginForm.username.status" feedback>
+          <a-form-item field="username" :label="loginForm.username.label" :help="loginForm.username.help" :extra="loginForm.username.extra" :validate-status="loginForm.username.validate_status()" feedback>
             <a-input v-model="loginForm.username.value" placeholder="Please enter your username here" />
           </a-form-item>
           <!-- password -->
-          <a-form-item field="password" :label="loginForm.password.label" :help="loginForm.password.help" :extra="loginForm.password.extra" :validate-status="loginForm.password.status" feedback>
-            <a-input v-model="loginForm.password.value" placeholder="Please enter your password here" />
+          <a-form-item field="password" :label="loginForm.password.label" :help="loginForm.password.help" :extra="loginForm.password.extra" :validate-status="loginForm.password.validate_status()" feedback>
+            <a-input-password v-model="loginForm.password.value" placeholder="Please enter your password here" :invisible-button="false"/>
           </a-form-item>
         </a-form>
-        <a-button type="primary" shape="round" :loading="loginForm.loginButton.isLoading" @click="loginForm.loginButton.click" long>{{ loginForm.loginButton.text }}</a-button>
+        <a-button type="primary" shape="round" :loading="loginForm.loginButton.isLoading" :disabled="loginForm.loginButton_isDisable" @click="loginForm.loginButton.click" long>{{ loginForm.loginButton.text }}</a-button>
       </a-tab-pane>
       <!-- Register -->
       <a-tab-pane key="2" title="注册">
         <a-form :model="loginForm" size="large">
           <!-- username -->
-          <a-form-item field="username" :label="loginForm.username.label" :help="loginForm.username.help" :extra="loginForm.username.extra" :validate-status="loginForm.username.status" feedback>
+          <a-form-item field="username" :label="loginForm.username.label" :help="loginForm.username.help" :extra="loginForm.username.extra" :validate-status="loginForm.username.validate_status()" feedback>
             <a-input v-model="loginForm.username.value" placeholder="Please enter your username here" />
           </a-form-item>
           <!-- password -->
-          <a-form-item field="password" :label="loginForm.password.label" :help="loginForm.password.help" :extra="loginForm.password.extra" :validate-status="loginForm.password.status" feedback>
-            <a-input v-model="loginForm.password.value" placeholder="Please enter your password here" />
+          <a-form-item field="password" :label="loginForm.password.label" :help="loginForm.password.help" :extra="loginForm.password.extra" :validate-status="loginForm.password.validate_status()" feedback>
+            <a-input-password v-model="loginForm.password.value" placeholder="Please enter your password here" :invisible-button="false"/>
           </a-form-item>
           <!-- password -->
-          <a-form-item field="repasswd" :label="loginForm.repasswd.label" :help="loginForm.repasswd.help" :extra="loginForm.repasswd.extra" :validate-status="loginForm.repasswd.status" feedback>
-            <a-input v-model="loginForm.repasswd.value" placeholder="Please repeat your password here" />
+          <a-form-item field="repasswd" :label="loginForm.repasswd.label" :help="loginForm.repasswd.help" :extra="loginForm.repasswd.extra" :validate-status="loginForm.repasswd.validate_status()" feedback>
+            <a-input-password v-model="loginForm.repasswd.value" placeholder="Please repeat your password here" :invisible-button="false"/>
           </a-form-item>
         </a-form>
-        <a-button type="primary" shape="round" :loading="loginForm.registerButton.isLoading" @click="loginForm.registerButton.click" long>{{ loginForm.registerButton.text }}</a-button>
+        <a-button type="primary" shape="round" :loading="loginForm.registerButton.isLoading" :disabled="loginForm.registerButton_isDisable" @click="loginForm.registerButton.click" long>{{ loginForm.registerButton.text }}</a-button>
       </a-tab-pane>
     </a-tabs>
   </a-modal>
@@ -120,7 +120,7 @@ class Upload {
       return {}
     }
 
-    if (fileItem.file!.size >= 1024 * 1024) {
+    if ((fileItem.file as File).size >= 1024 * 1024) {
       Message.warning('图片过大, 请限制在 1 MB 以内')
       onError('Too Large Size')
       return {}
@@ -242,6 +242,9 @@ export default class Home extends Vue {
     Visible: false,
     HandleClick: (): void => {
       this.loginForm.Visible = true
+      this.loginForm.username.value = ''
+      this.loginForm.password.value = ''
+      this.loginForm.repasswd.value = ''
     },
     HandleOk: ():void => {
       this.loginForm.Visible = false
@@ -258,26 +261,111 @@ export default class Home extends Vue {
     username: {
       label: '用户名',
       value: '',
-      status: undefined,
+      status: '',
       help: '',
-      extra: '5 ~ 32 个字符, 不允许包含特殊字符'
+      extra: '5 ~ 32 个字符, 不允许包含特殊字符',
+      validate_status: (): 'success' | 'warning' | 'error' | 'validating' | undefined => {
+        const u = this.loginForm.username
+        const reg = /[^0-9a-zA-Z]/
+        if (u.value === '') {
+          u.help = ''
+          u.extra = '5 ~ 32 个字符, 不允许包含特殊字符'
+          u.status = ''
+        } else if (u.value.length < 5) {
+          u.help = 'the username is too short'
+          u.extra = ''
+          u.status = 'warning'
+        } else if (u.value.length > 32) {
+          u.help = 'the username is too long'
+          u.extra = ''
+          u.status = 'warning'
+        } else if (reg.exec(u.value) !== null) {
+          u.help = '不允许包含特殊字符'
+          u.extra = ''
+          u.status = 'error'
+        } else {
+          u.help = ''
+          u.extra = ''
+          u.status = 'success'
+        }
+        if (u.status === '') {
+          return undefined
+        }
+        return u.status as 'success' | 'warning' | 'error' | 'validating' | undefined
+      }
     },
     password: {
       label: '密码',
       value: '',
-      status: undefined,
+      status: '',
       help: '',
-      extra: '5 ~ 32 个字符, 特殊字符只允许 !@#$%^&*()'
+      extra: '5 ~ 32 个字符, 特殊字符只允许 !@#$%^&*()',
+      validate_status: (): 'success' | 'warning' | 'error' | 'validating' | undefined => {
+        const p = this.loginForm.password
+        const reg = /[^0-9a-zA-Z!@#$%^&*()]/
+        if (p.value === '') {
+          p.help = ''
+          p.extra = '5 ~ 32 个字符, 特殊字符只允许 !@#$%^&*()'
+          p.status = ''
+        } else if (p.value.length < 5) {
+          p.help = 'the password is too short'
+          p.extra = ''
+          p.status = 'warning'
+        } else if (p.value.length > 32) {
+          p.help = 'the password is too long'
+          p.extra = ''
+          p.status = 'warning'
+        } else if (reg.exec(p.value) !== null) {
+          p.help = '包含了不支持的字符'
+          p.extra = ''
+          p.status = 'error'
+        } else {
+          p.help = ''
+          p.extra = ''
+          p.status = 'success'
+        }
+        if (p.status === '') {
+          return undefined
+        }
+        return p.status as 'success' | 'warning' | 'error' | 'validating' | undefined
+      }
     },
     repasswd: {
       label: '重复密码',
       value: '',
-      status: undefined,
+      status: '',
       help: '',
-      extra: undefined
+      extra: '',
+      validate_status: (): 'success' | 'warning' | 'error' | 'validating' | undefined => {
+        const p = this.loginForm.password
+        const r = this.loginForm.repasswd
+        const reg = /[^0-9a-zA-Z!@#$%^&*()]/
+        if (r.value === '') {
+          r.help = ''
+          r.extra = ''
+          r.status = ''
+        } else if (reg.exec(r.value) !== null) {
+          r.help = '包含了不支持的字符'
+          r.extra = ''
+          r.status = 'error'
+        } else if (r.value !== p.value) {
+          r.help = '两次输入的密码不一致'
+          r.extra = ''
+          r.status = 'error'
+        } else {
+          r.help = ''
+          r.extra = ''
+          r.status = 'success'
+        }
+        if (r.status === '') {
+          return undefined
+        }
+        return r.status as 'success' | 'warning' | 'error' | 'validating' | undefined
+      }
     },
     loginButton: {
       isLoading: false,
+      isDisable: false,
       text: '登录',
       click: ():void => {
         this.loginForm.loginButton.isLoading = true
@@ -326,6 +414,7 @@ export default class Home extends Vue {
     },
     registerButton: {
       isLoading: false,
+      isDisable: false,
       text: '注册',
       click: ():void => {
         this.loginForm.registerButton.isLoading = true
@@ -371,6 +460,12 @@ export default class Home extends Vue {
           this.loginForm.repasswd.value = ''
         })
       }
+    },
+    get loginButton_isDisable (): boolean {
+      return this.username.status !== 'success' || this.password.status !== 'success'
+    },
+    get registerButton_isDisable (): boolean {
+      return this.username.status !== 'success' || this.password.status !== 'success' || this.repasswd.status !== 'success'
     }
   }
 }
