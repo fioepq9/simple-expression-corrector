@@ -5,11 +5,14 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from .models import ErrorResponse, JudgeResponse
 from dal.db.image import Image as dbImage
+from dal.db.judge import JudgeImage
+
 
 import cv2
 import os
 from models.de import detect, get_model
 from PIL import Image
+
 
 class Judge(Resource):
     def __init__(self):
@@ -31,20 +34,16 @@ class Judge(Resource):
         if p_url is None:
             return ErrorResponse(2, 'original picture not found')
 
-        # yolomodels
+        # save judge path to Mysql
         image = Image.open(p_url)
-        filename = image.filename
-        save_url = os.path.join('static/judge/', os.path.basename(filename.split('/')[-1]))
-        img = cv2.imread(filename)
+        filename = image.filename.split('_')[-1]
+        judge_id, save_url = JudgeImage.Upload(filename, pid)
 
+        # yolomodels
+        img = cv2.imread(image.filename)
         yolov5_model = get_model()
         img = detect(yolov5_model, img)
         image = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         image.save(save_url)
-
-        # TODO: judge
-        judge_id = 412433529662617601
-        # filename = '412433529662617601_github.png'
-        # save_url = 'static/judge/412433529662617601_github.png'
 
         return JudgeResponse(0, '算式批改完成', judge_id, filename, save_url)

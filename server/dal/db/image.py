@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import os
 
 import config
@@ -22,7 +24,7 @@ class Image(db.Model):
         db.session.commit()
 
     @classmethod
-    def Upload(cls, name: str, uid: int) -> (int, str):
+    def Upload(cls, name: str, uid: int) -> Tuple[int, str]:
         """
             Upload image Info to MySQL.
 
@@ -46,6 +48,7 @@ class Image(db.Model):
         try:
             img: Image = cls.query.filter_by(Id=pid).first()
         except:
+            print('QueryUrl error')
             return None
         else:
             return img.Url
