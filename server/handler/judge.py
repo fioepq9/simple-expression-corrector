@@ -8,7 +8,7 @@ from dal.db.image import Image as dbImage
 
 import cv2
 import os
-from models.de import detect,get_model
+from models.de import detect, get_model
 from PIL import Image
 
 class Judge(Resource):
