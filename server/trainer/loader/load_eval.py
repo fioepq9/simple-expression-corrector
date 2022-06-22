@@ -53,19 +53,15 @@ def read_eval_txt(path: str, training=True) -> List[str]:
     Return:
         加载的训练集或者测试集
     """
+    with open(path, mode='r', encoding='utf-8') as f:
+        eval_txt = list(map(lambda x: x.strip('\n').split('\t') ,f.readlines()))
+    train_set_length = int(0.9 * len(eval_txt))
     if training:
-        b, e = 0, 300
+        for i in range(train_set_length):
+            yield eval_txt[i]
     else:
-        b, e = 300, 342
-    with open(path, encoding='utf8') as f:
-        i = 0
-        while True:
-            line = f.readline()
-            if not line:
-                break
-            if b <= i <= e:
-                yield line.strip('\n').split('\t')
-            i = i + 1
+        for i in range(train_set_length, len(eval_txt)):
+            yield eval_txt[i]
 
 
 class FixHeightResize(object):
@@ -111,3 +107,11 @@ class EvalImageSet(Dataset):
 
     def __getitem__(self, idx):
         return self.img[idx], self.label[idx]
+
+
+
+if __name__ == "__main__":
+    eval_txt = list(read_eval_txt('./data/eval.txt', True))
+    for x in eval_txt:
+        print(x)
+    print(len(eval_txt))
