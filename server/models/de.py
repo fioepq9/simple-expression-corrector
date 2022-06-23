@@ -83,5 +83,5 @@ def detect(model, im0s, uid, pid, jid):
                 im0 = plot_one_box(xyxy, im0, label=label[flag], color=colors[flag], line_thickness=1)
     print('Done. (%.3fs)' % (time.time() - t0))
     with open('log.txt', mode='a+', encoding='utf-8') as f:
-        f.write(f'user: {uid}, origin: {pid}, judge_id: {jid}, acc: {acc / total * 100:.2f}%')
+        f.write(f'user: {uid}, origin: {pid}, judge_id: {jid}, acc: {acc / total * 100:.2f}%\n')
     return im0
