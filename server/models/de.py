@@ -70,7 +70,7 @@ def detect(model, im0s):
             det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
             for *xyxy, conf, cls in det:
                 label = ['1', '0']
-                colors = [(0, 255, 0), (255, 0, 0)]
+                colors = [(0, 255, 0), (0, 0, 255)]
                 flag = 0
                 # 0 answer right green
                 # 1 answer error red
