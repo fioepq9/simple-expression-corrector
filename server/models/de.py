@@ -47,12 +47,9 @@ def letterbox(img, new_shape=(416, 416), color=(114, 114, 114), auto=True, scale
     return img, ratio, (dw, dh)
 
 
-def detect(model, im0s):
+def detect(model, im0s, uid, pid, jid):
     t0 = time.time()
     device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
-    names = model.names if hasattr(model, 'names') else model.modules.names
-    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
-    print(type(im0s))
     img = letterbox(im0s, new_shape=640)[0]
     img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
     img = np.ascontiguousarray(img)
@@ -64,6 +61,8 @@ def detect(model, im0s):
     pred = model(img, augment=False)[0]
     pred = non_max_suppression(pred, 0.4, 0.5,
                                fast=True, classes=None, agnostic=False)
+
+    acc, total = 0, 0
     for i, det in enumerate(pred):  # detections per image
         im0 = im0s
         if det is not None and len(det):
@@ -78,7 +77,11 @@ def detect(model, im0s):
                     temp = im0[int(xyxy[1]): int(xyxy[3]), int(xyxy[0]): int(xyxy[2])]
                     image = Image.fromarray(cv2.cvtColor(temp, cv2.COLOR_BGR2RGB))
                     flag = 0 if correct(image) else 1
+                    acc += 1 if flag == 0 else 0
+                    total += 1
 
                 im0 = plot_one_box(xyxy, im0, label=label[flag], color=colors[flag], line_thickness=1)
     print('Done. (%.3fs)' % (time.time() - t0))
+    with open('log.txt', mode='a+', encoding='utf-8') as f:
+        f.write(f'user: {uid}, origin: {pid}, judge_id: {jid}, acc: {acc / total * 100:.2f}%')
     return im0

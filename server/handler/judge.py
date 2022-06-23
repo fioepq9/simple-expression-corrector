@@ -7,7 +7,6 @@ from .models import ErrorResponse, JudgeResponse
 from dal.db.image import Image as dbImage
 from dal.db.judge import JudgeImage
 
-
 import cv2
 import os
 from models.de import detect, get_model
@@ -44,7 +43,7 @@ class Judge(Resource):
         # yolomodels
         img = cv2.imread(image.filename)
         yolov5_model = get_model()
-        img = detect(yolov5_model, img)
+        img = detect(yolov5_model, img, uid, pid, judge_id)
         image = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         image.save(save_url)
 
