@@ -65,8 +65,17 @@ def detect(model, im0s):
         if det is not None and len(det):
             det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
             for *xyxy, conf, cls in det:
-                label = '%s%.2f' % (names[int(cls)], conf)
-                im0 = plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=1)
+                label = ['√', '×']
+                colors = [(0, 255, 0), (255, 0, 0)]
+                flag = 0
+                # 0 answer right green
+                # 1 answer error red
+                if xyxy[4] > 0.75:
+                    temp = img0[int(xyxy[1]) : int(xyxy[3]), int(xyxy[0]) : int(xyxy[2])]
+                    image = Image.fromarray(cv2.cvtColor(temp, cv2.COLOR_BGR2RGB))
+                    flag = correct(image)
+
+                im0 = plot_one_box(xyxy, im0, label=label[flag], color=colors[flag], line_thickness=1)
     print('Done. (%.3fs)' % (time.time() - t0))
     return im0
 
