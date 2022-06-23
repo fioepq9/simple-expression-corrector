@@ -3,7 +3,10 @@
 
       <!-- header -->
       <a-layout-header>
-        <a-page-header title="simple-expression-corrector" subtitle="v 1.0" :show-back="false">
+        <a-page-header subtitle="v 1.0" :show-back="false">
+        <template #title>
+          <a-image height="28" src="static/assets/logo.png"/>
+        </template>
         <template #extra>
             <a-avatar v-if="!isLogin" trigger-type="mask" @click="loginForm.HandleClick">
             未登录
@@ -11,11 +14,14 @@
               <IconUser/>
             </template>
             </a-avatar>
-            <a-avatar v-if="isLogin" trigger-type="mask" @click="void(0)" :style="avaterStyle[Math.floor(Math.random() * avaterStyle.length)]">
-            <a-image v-if="userInfo.avatar !== ''"/>
-            <span v-if="userInfo.avatar === ''">
-              {{ userInfo.username.substring(0, 6) }}
-            </span>
+            <a-avatar v-if="isLogin" trigger-type="mask" @click="void(0)">
+            <!-- custom -->
+            <img alt="avatar" v-if="userInfo.avatar !== ''"/>
+            <!-- default -->
+            <img alt="avatar"
+                v-if="userInfo.avatar === ''"
+                :src="defaultAvatar[Math.floor(Math.random() * defaultAvatar.length)]"
+            />
             <template #trigger-icon>
               <IconBulb />
             </template>
@@ -396,12 +402,27 @@ export default class Home extends Vue {
     }
   }
 
-  avaterStyle = [
-    { backgroundColor: '#7BC616' },
-    { backgroundColor: '#14C9C9' },
-    { backgroundColor: '#168CFF' },
-    { backgroundColor: '#FF7D00' },
-    { backgroundColor: '#FFC72E' }
+  defaultAvatar = [
+    'static/assets/default_avatar_1.jpg',
+    'static/assets/default_avatar_2.jpg',
+    'static/assets/default_avatar_3.jpg',
+    'static/assets/default_avatar_4.jpg',
+    'static/assets/default_avatar_5.jpg',
+    'static/assets/default_avatar_6.jpg',
+    'static/assets/default_avatar_7.jpg',
+    'static/assets/default_avatar_8.jpg',
+    'static/assets/default_avatar_9.jpg',
+    'static/assets/default_avatar_10.jpg',
+    'static/assets/default_avatar_11.jpg',
+    'static/assets/default_avatar_12.jpg',
+    'static/assets/default_avatar_13.jpg',
+    'static/assets/default_avatar_14.jpg',
+    'static/assets/default_avatar_15.jpg',
+    'static/assets/default_avatar_16.jpg',
+    'static/assets/default_avatar_17.jpg',
+    'static/assets/default_avatar_18.jpg',
+    'static/assets/default_avatar_19.jpg',
+    'static/assets/default_avatar_20.jpg'
   ]
 
   isLogin = false
