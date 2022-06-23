@@ -2,13 +2,15 @@
 # sys.path.insert(0, '/yolov5-master/')
 from utils.datasets import *
 from utils.utils import *
+from trainer import *
+import cv2
 import os
 
 
 def get_model():
     weights = './weights/best.pt'
     device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
-    #google_utils.attempt_download(weights)
+    # google_utils.attempt_download(weights)
     model = torch.load(weights, map_location=device)['model']
     model.to(device).eval()
     return model
@@ -44,11 +46,13 @@ def letterbox(img, new_shape=(416, 416), color=(114, 114, 114), auto=True, scale
     img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
     return img, ratio, (dw, dh)
 
+
 def detect(model, im0s):
     t0 = time.time()
     device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
     names = model.names if hasattr(model, 'names') else model.modules.names
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(names))]
+    print(type(im0s))
     img = letterbox(im0s, new_shape=640)[0]
     img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
     img = np.ascontiguousarray(img)
@@ -65,17 +69,16 @@ def detect(model, im0s):
         if det is not None and len(det):
             det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
             for *xyxy, conf, cls in det:
-                label = ['√', '×']
+                label = ['1', '0']
                 colors = [(0, 255, 0), (255, 0, 0)]
                 flag = 0
                 # 0 answer right green
                 # 1 answer error red
-                if xyxy[4] > 0.75:
-                    temp = img0[int(xyxy[1]) : int(xyxy[3]), int(xyxy[0]) : int(xyxy[2])]
+                if conf > 0.75:
+                    temp = im0[int(xyxy[1]): int(xyxy[3]), int(xyxy[0]): int(xyxy[2])]
                     image = Image.fromarray(cv2.cvtColor(temp, cv2.COLOR_BGR2RGB))
-                    flag = correct(image)
+                    flag = 0 if correct(image) else 1
 
                 im0 = plot_one_box(xyxy, im0, label=label[flag], color=colors[flag], line_thickness=1)
     print('Done. (%.3fs)' % (time.time() - t0))
     return im0
-

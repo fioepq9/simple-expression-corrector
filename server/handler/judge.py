@@ -39,6 +39,8 @@ class Judge(Resource):
         filename = image.filename.split('_')[-1]
         judge_id, save_url = JudgeImage.Upload(filename, pid)
 
+        print(f'{p_url}')
+
         # yolomodels
         img = cv2.imread(image.filename)
         yolov5_model = get_model()

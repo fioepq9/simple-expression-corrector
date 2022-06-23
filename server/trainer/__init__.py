@@ -1,40 +1,45 @@
-import Image
 import torch
 from torchvision import transforms
 
-from .models.crnn import CRNN
-from .loader.load_eval import FixHeightResize
+from .models.crnn import CRNN, LabelTransformer
+from .loader.load_eval import FixHeightResize, DataLoader
+
 
 def correct(img) -> bool:
-    # reconstructure image
-    transform = [transforms.Resize((32, 100), Image.ANTIALIAS)
-                     if fix_width else FixHeightResize(32)]
+    letters = '1234567890-=+.×÷'
+    labeltransformer = LabelTransformer(letters)
+    # 图片缩放 + 转化为灰度图 + 转化为张量
+    transform = [FixHeightResize(32)]
+    transform.extend([transforms.Grayscale(), transforms.ToTensor()])
     transform = transforms.Compose(transform)
-    img = transform(img)
-    img = img.to(
-        torch.device(
-            'cuda' if torch.cuda.is_available() else 'cpu'
-        )
-    )
-    # load model net
-    model_path = f"trainer/asset/crnn.pth"
-    net = CRNN(1, len('1234567890-=+.×÷') + 1)
-    if torch.cuda.is_available():
-        net.load_state_dict(
-            torch.load(model_path, map_location=torch.device('cpu'))
-        )
-    else:
-        net.load_state_dict(torch.load(model_path))
-    # predict
-    outputs = net(img)  # length × batch × num_letters
-    outputs = outputs.max(2)[1].transpose(0, 1)  # batch × length
-    outputs = labeltransformer.decode(outputs.data)
-    # eval
-    outputs = outputs.split('=')
-    if len(outputs) != 2:
+    # use gpu or not
+    use_cuda = torch.cuda.is_available()
+    device = torch.device('cuda' if use_cuda else 'cpu')
+    net = CRNN(1, len(letters) + 1)
+    net.load_state_dict(torch.load("./trainer/asset/crnn.pth", map_location=torch.device('cpu')))
+    if use_cuda:
+        net.to(device)
+    net.eval()
+    imgs = [transform(img)]
+    dataloader = DataLoader(imgs)
+    for img in dataloader:
+        img.to(device)
+        outputs = net(img)  # length × batch × num_letters
+        outputs = outputs.max(2)[1].transpose(0, 1)  # batch × length
+        outputs = labeltransformer.decode(outputs.data)
+    output = outputs[0]
+
+    output = output.split('=')
+    if len(output) != 2:
+        print(f'output: {output}, length = {len(output)}')
         return False
     try:
-        out = eval(outputs[0])
+        output[0] = output[0].replace('×', '*')
+        output[0] = output[0].replace('÷', '/')
+        out = float(eval(output[0]))
+        real = float(output[1])
     except:
+        print(f'exception occur, eval: {output[0]}')
         return False
-    return out == outputs[1]
+    print(f'left:{output[0]}, out: {out}, real: {real}')
+    return abs(out - real) <= 1e-3

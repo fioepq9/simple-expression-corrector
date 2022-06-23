@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 
-import loader
+from trainer import loader
 
 
 class CRNN(nn.Module):
